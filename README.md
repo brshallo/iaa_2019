@@ -1,0 +1,1 @@
+Code used to create examples for lightning talk on "Managing objects in analytics workflows, using lists as columns in data frames" delivered on 2019-04-27 at the Institute for Advanced Analytics at NC State. See presentation here: https://youtu.be/gme4Fb9JVjk (description of video contains links to recommended other resources).

@@ -1,0 +1,134 @@
+---
+title: "Australia state prison sentence"
+author: "Bryan Shalloway"
+date: "4/26/2019"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, message = FALSE, warning = FALSE}
+library(tidyverse)
+library(lubridate)
+library(broom)
+library(fpp2)
+```
+
+# Prep exmaple dataset
+
+*Prep data used in examples:*
+```{r}
+prison_df <- fpp2::prisonLF %>% 
+  group_by(state, legal, t) %>% 
+  summarise(count = sum(count)) %>% 
+  ungroup() %>% 
+  rename(state_aus = state, date_mo = t) %>% 
+  select(state_aus, date_mo, legal, count) %>% 
+  arrange(date_mo) %>% 
+  spread(legal, count)
+
+```
+
+# List columns example
+
+*Make custom lm function with formula specified:*
+```{r}
+lm_prison <- function(df){
+  lm(Sentenced ~ Remanded, data = df)
+}
+```
+
+*Unnest evaluation metrics and plot:*
+```{r}
+prison_df %>%
+  group_by(state_aus) %>%
+  nest() %>% print() %>% 
+  mutate(models = map(data, lm_prison)) %>% print() %>% 
+  mutate(eval_metrics = map(models, broom::glance)) %>% print() %>% 
+  unnest(eval_metrics, .drop = TRUE) %>% print() %>% 
+  ggplot(aes(x = fct_reorder(state_aus, r.squared),
+             y = r.squared)) +
+  geom_col()
+```
+
+* print statements show output at each step for use in presentation
+
+*Build dataframe and print particular elements:*
+```{r}
+core_data <- prison_df %>% 
+  group_by(state_aus) %>% 
+  nest() %>% 
+  mutate(models = map(data, lm_prison)) %>% 
+  mutate(eval_metrics = map(models, broom::glance))
+
+core_data %>% 
+  pluck("data", 1)
+
+core_data %>% 
+  pluck("models", 1)
+
+core_data %>% 
+  pluck("eval_metrics", 1)
+```
+
+* extract objects and paste into presentation
+
+# Cluttered environment example
+
+Run below and then take screenshot of "cluttered" environment for presentation.
+
+```{r}
+knitr::opts_chunk$set(eval = FALSE)
+```
+
+
+*Visualization:*
+```{r}
+chart <- prison_df %>% 
+  ggplot(aes(x = Remanded, y = Sentenced))+
+  geom_point()
+  # facet_wrap(~state_aus, scales = "free")
+
+chart1 <- chart
+chart2 <- chart
+chart3 <- chart
+chart4 <- chart
+```
+
+```{r}
+charts_mult <- prison_df %>% 
+  ggplot(aes(x = Remanded, y = Sentenced, colour = state_aus))+
+  geom_point()
+
+map(1:8, 
+     ~charts_mult +
+      ggforce::facet_wrap_paginate(~state_aus, ncol = 1, nrow = 1, scales = "free", page = .x)+
+      theme(legend.position = "none") 
+     )
+```
+
+*Model:*
+```{r}
+model <- lm(Sentenced ~ Remanded, data = prison_df)
+
+model_simple %>% 
+  summary()
+
+model1 <- model
+model2 <- model
+model3 <- model
+model4 <- model
+
+```
+
+```{r}
+valuation_metrics <- model %>% 
+  broom::glance()
+
+evaluation_metrics1 <- evaluation_metrics
+evaluation_metrics2 <- evaluation_metrics
+evaluation_metrics3 <- evaluation_metrics
+evaluation_metrics4 <- evaluation_metrics
+```
